@@ -10,7 +10,9 @@ from cheetah.stx import CheetaAnnotationFile, Segment
 
 def main():
     root = filedialog.askdirectory(title="Select root directory of annotations")
-    output_path = filedialog.askdirectory(title="Select output directory", mustexist=False)
+    output_path = filedialog.askdirectory(
+        title="Select output directory", mustexist=False
+    )
 
     os.makedirs(output_path, exist_ok=True)
 
@@ -18,7 +20,10 @@ def main():
     annotation_filepaths = glob(f"{root}/**/*.stxsm", recursive=True)
 
     with multiprocessing.Pool() as p:
-        p.starmap(extract_annotation, zip(annotation_filepaths, repeat(wav_filepaths), repeat(output_path)))
+        p.starmap(
+            extract_annotation,
+            zip(annotation_filepaths, repeat(wav_filepaths), repeat(output_path)),
+        )
 
 
 def find_wav_files(root: str):
@@ -27,7 +32,9 @@ def find_wav_files(root: str):
     return {os.path.basename(x): x for x in wav_filepaths}
 
 
-def extract_annotation(annotation_file: str, wav_paths: dict[str, str], output_path: str):
+def extract_annotation(
+    annotation_file: str, wav_paths: dict[str, str], output_path: str
+):
     annotations = CheetaAnnotationFile.from_stxsm_file(annotation_file)
     wav = load_wav_to_mono(wav_paths[annotations.file_id])
     for segment in annotations.segments:
@@ -44,6 +51,7 @@ def load_wav_to_mono(path: str):
     if file.ndim > 1:  # if there are multiple dimensions (channels) take only the first
         file = file[:, 0]
     return file
+
 
 def extract_wav_segment(wav_array, segment: Segment, additional=48000):
     start = max(segment.start - additional, 0)

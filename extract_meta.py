@@ -4,6 +4,8 @@ import pandas as pd
 from tkinter import filedialog, messagebox
 from os import path
 
+from cheetah.stx import CheetaAnnotationFile, find_annotation_files
+
 
 def main():
     root = filedialog.askdirectory(title="Select root directory of annotations")
@@ -18,8 +20,14 @@ def main():
         messagebox.showerror("Invalid file extension")
         exit(1)
 
-    annotation_filepaths = glob(f"{root}/**/*.stxsm", recursive=True)
-    dataframes = map(partial(pd.read_xml, parser="etree"), annotation_filepaths)
+    annotation_filepaths = find_annotation_files(root)
+
+    wav_names = map(lambda x: CheetaAnnotationFile.from_stxsm_file(x).file_id, annotation_filepaths)
+    dataframes = list(map(partial(pd.read_xml, parser="etree"), annotation_filepaths))
+    for df, wav in zip(dataframes, wav_names):
+        df.insert(0, "WAV File", wav)
+
+
     output_frame = pd.concat(dataframes)
 
     if extension == ".xlsx":

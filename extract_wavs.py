@@ -5,7 +5,8 @@ from glob import glob
 import os
 from tkinter import filedialog
 
-from cheetah.stx import CheetaAnnotationFile, Segment
+from cheetah.stx import CheetaAnnotationFile, Segment, find_annotation_files
+from cheetah.wav import extract_wav_segment, load_wav_to_mono
 
 
 def main():
@@ -17,7 +18,7 @@ def main():
     os.makedirs(output_path, exist_ok=True)
 
     wav_filepaths = find_wav_files(root)
-    annotation_filepaths = glob(f"{root}/**/*.stxsm", recursive=True)
+    annotation_filepaths = find_annotation_files(root)
 
     with multiprocessing.Pool() as p:
         p.starmap(
@@ -44,19 +45,6 @@ def extract_annotation(
             annotations.samplerate,
             extract_wav_segment(wav, segment),
         )
-
-
-def load_wav_to_mono(path: str):
-    _, file = wavfile.read(path)
-    if file.ndim > 1:  # if there are multiple dimensions (channels) take only the first
-        file = file[:, 0]
-    return file
-
-
-def extract_wav_segment(wav_array, segment: Segment, additional=48000):
-    start = max(segment.start - additional, 0)
-    end = min(segment.start + segment.length + additional, len(wav_array))
-    return wav_array[start:end]
 
 
 if __name__ == "__main__":

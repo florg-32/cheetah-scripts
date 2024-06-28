@@ -1,6 +1,11 @@
+from glob import glob
 from typing import Iterable
 from xml.etree.ElementTree import Element, ElementTree
 from dataclasses import dataclass
+
+
+def find_annotation_files(root: str) -> list[str]:
+    return glob(f"{root}/**/*.stxsm", recursive=True)
 
 
 @dataclass
@@ -8,7 +13,7 @@ class AnnotationFile:
     tree: ElementTree
 
     @classmethod
-    def from_stxsm_file(cls, path: str) -> "AnnotationFile":
+    def from_stxsm_file(cls, path: str):
         tree = ElementTree()
         tree.parse(path)
         return cls(tree)
@@ -82,5 +87,12 @@ class CheetaSegment(Segment):
     def vocnr(self) -> int:
         return int(self.attributes.get("vocnr", "-1"))
 
+    @property
+    def distance(self) -> int:
+        return int(self.attributes["distance"])
+
     def __repr__(self) -> str:
-        return f"CheetaSegment(stimulus={self.stimulus_id}, vocnr={self.vocnr}, class={self.attributes['class']})"
+        return f"CheetaSegment({self.attributes})"
+
+    def __hash__(self) -> int:
+        return hash(self.id)
